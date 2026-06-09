@@ -1,5 +1,7 @@
 // ============================================================
-//  PIP MAN  —  Pip-Boy 3000 App
+//  PIP MAN  —  Pip-Boy 3000 App]
+//  Description:
+//  A Pac-Man-inspired maze game where you navigate a pipman through a labyrinth, collecting dots and power pellets while avoiding ghosts. Eat all the dots to clear the sector and advance to the next level, but beware of the roaming ghosts! Use power pellets strategically to turn the tables and eat the ghosts for extra points.
 //  Controls:
 //    knob1 (scroll wheel) → UP (-1) / DOWN (+1)
 //    knob2 (thumb wheel)  → LEFT (-1) / RIGHT (+1)
@@ -266,61 +268,101 @@
         var cx = OX + c * TW + Math.floor(TW / 2);
         var cy = OY + r * TH + Math.floor(TH / 2);
         if (map[r][c] === T_DOT) {
-          h.setColor(3).fillRect(cx - 1, cy - 1, cx + 1, cy + 1);
+          // Bottle cap: circle rim + ridged centre pip
+          h.setColor(3).drawCircle(cx, cy, 2);
+          h.setColor(1).fillRect(cx - 1, cy - 1, cx + 1, cy + 1);
+          h.setColor(0).fillRect(cx, cy, cx, cy);
         } else if (map[r][c] === T_PWR && pwrVis) {
-          h.setColor(1).fillRect(cx - 3, cy - 3, cx + 3, cy + 3);
-          h.setColor(3).fillRect(cx - 1, cy - 1, cx + 1, cy + 1);
+          // Rad-Away IV bag: rect body, label stripe, drip tube, hang hook
+          h.setColor(2).fillRect(cx - 3, cy - 4, cx + 3, cy + 2);
+          h.setColor(3).drawRect(cx - 3, cy - 4, cx + 3, cy + 2);
+          h.setColor(1).fillRect(cx - 2, cy - 2, cx + 2, cy - 1);
+          h.setColor(3).fillRect(cx - 1, cy + 2, cx + 1, cy + 4);
+          h.setColor(3).fillRect(cx,     cy - 5, cx,     cy - 4);
         }
       }
     }
   }
 
   function drawPlayer() {
+    // Vault Boy HEAD only — big round face, helmet, eye, smile
     var cx = OX + px * TW + Math.floor(TW / 2);
     var cy = OY + py * TH + Math.floor(TH / 2);
-    var r  = Math.floor(Math.min(TW, TH) / 2) - 1;
-    h.setColor(3).fillRect(cx - r, cy - r, cx + r, cy + r);
-    if (Math.floor(pAnimTick / 2) % 2 === 0 && (pDir.x !== 0 || pDir.y !== 0)) {
-      var mw = Math.floor(r / 2);
-      if (pDir.x === 1)  h.setColor(0).fillRect(cx,     cy - mw, cx + r, cy + mw);
-      if (pDir.x === -1) h.setColor(0).fillRect(cx - r, cy - mw, cx,     cy + mw);
-      if (pDir.y === 1)  h.setColor(0).fillRect(cx - mw, cy,     cx + mw, cy + r);
-      if (pDir.y === -1) h.setColor(0).fillRect(cx - mw, cy - r, cx + mw, cy);
-    }
-    var ex = cx + (-pDir.y) * Math.floor(r / 2) - 1;
-    var ey = cy + (-pDir.x) * Math.floor(r / 2) - 1;
-    h.setColor(0).fillRect(ex, ey, ex + 2, ey + 2);
-  }
+    var S  = Math.max(1, Math.floor(Math.min(TW, TH) * 0.85 / 6));
+    var flip = (pDir.x < 0) ? -1 : 1;
+    // Blink when animTick crosses 16
+    var blink = (Math.floor(pAnimTick / 8) % 8 === 0);
 
+    // Helmet / hair band (colour 1 = blue-ish)
+    h.setColor(1).fillRect(cx - 3*S, cy - 5*S, cx + 3*S, cy - 3*S);
+    // Face (yellow, colour 3)
+    h.setColor(3).fillRect(cx - 3*S, cy - 3*S, cx + 3*S, cy + 3*S);
+    // Ear nubs
+    h.setColor(3).fillRect(cx - 4*S, cy - S,   cx - 3*S, cy + S);
+    h.setColor(3).fillRect(cx + 3*S, cy - S,   cx + 4*S, cy + S);
+    // Eye (direction-aware, blinking)
+    if (!blink) {
+      h.setColor(0).fillRect(cx + flip*S, cy - 2*S, cx + flip*2*S, cy);
+    } else {
+      h.setColor(0).fillRect(cx + flip*S, cy - S,   cx + flip*2*S, cy - S);
+    }
+    // Vault Boy smile
+    h.setColor(0).fillRect(cx - S,   cy + S,   cx + S,   cy + S);
+    h.setColor(0).fillRect(cx - 2*S, cy,       cx - S,   cy);
+    h.setColor(0).fillRect(cx + S,   cy,       cx + 2*S, cy);
+  }
   function drawGhosts() {
+    // Feral Ghoul HEAD only — sunken skull, glowing eyes, open jaw
     ghosts.forEach(function(g, i) {
       if (g.dead || g.respawn > 0) return;
       var cx = OX + g.x * TW + Math.floor(TW / 2);
       var cy = OY + g.y * TH + Math.floor(TH / 2);
-      var r  = Math.floor(Math.min(TW, TH) / 2) - 1;
+      var S  = Math.max(1, Math.floor(Math.min(TW, TH) * 0.85 / 6));
       var col;
+
       if (g.scared) {
+        // Scared ghoul: dim, crouching head, no glowing eyes
         col = (frightenTimer < 30 && Math.floor(pelletTick / 5) % 2 === 0) ? 3 : 2;
-      } else {
-        col = GHOST_COLORS[i % 4];
+        h.setColor(col).fillRect(cx - 3*S, cy - 2*S, cx + 3*S, cy + 2*S);
+        h.setColor(0).fillRect(cx - 2*S, cy - S, cx - S,   cy);
+        h.setColor(0).fillRect(cx + S,   cy - S, cx + 2*S, cy);
+        return;
       }
-      h.setColor(col);
-      h.fillRect(cx - r, cy - r, cx + r, cy + r);
-      h.fillRect(cx - r + 1, cy - r - 2, cx + r - 1, cy - r);
-      if (!g.scared) {
-        h.setColor(3);
-        h.fillRect(cx - r + 1, cy - 3, cx - 1,     cy + 1);
-        h.fillRect(cx + 1,     cy - 3, cx + r - 1, cy + 1);
-        var plx  = cx - r + 1 + (g.dir.x > 0 ? 2 : 0);
-        var prx  = cx + 1     + (g.dir.x > 0 ? 2 : 0);
-        var eyeY = cy - 3     + (g.dir.y > 0 ? 2 : 0);
-        h.setColor(0);
-        h.fillRect(plx, eyeY, plx + 2, eyeY + 2);
-        h.fillRect(prx, eyeY, prx + 2, eyeY + 2);
-      }
+
+      col = GHOST_COLORS[i % 4];
+      var flip = (g.dir.x < 0) ? -1 : 1;
+
+      // Skull cranium (irregular, wider at top)
+      h.setColor(col).fillRect(cx - 3*S, cy - 5*S, cx + 3*S, cy + 2*S);
+      // Rotting scalp patches (dark)
+      h.setColor(0);
+      h.fillRect(cx - 3*S, cy - 5*S, cx - 2*S, cy - 4*S);
+      h.fillRect(cx + 2*S, cy - 5*S, cx + 3*S, cy - 4*S);
+      h.fillRect(cx - S,   cy - 5*S, cx,        cy - 5*S);
+      // Sunken cheeks / temple hollows
+      h.setColor(0).fillRect(cx - 3*S, cy - S, cx - 2*S, cy);
+      h.setColor(0).fillRect(cx + 2*S, cy - S, cx + 3*S, cy);
+
+      // Glowing eyes — radioactive yellow (colour 3)
+      h.setColor(3);
+      var eyeShift = (g.dir.x !== 0) ? flip*S : 0;
+      h.fillRect(cx - 2*S + eyeShift, cy - 3*S, cx - S + eyeShift,   cy - 2*S);
+      h.fillRect(cx + S   + eyeShift, cy - 3*S, cx + 2*S + eyeShift, cy - 2*S);
+      // Pupil dot (colour 1)
+      h.setColor(1);
+      h.fillRect(cx - 2*S + eyeShift, cy - 3*S, cx - 2*S + eyeShift, cy - 3*S);
+      h.fillRect(cx + S   + eyeShift, cy - 3*S, cx + S   + eyeShift, cy - 3*S);
+
+      // Gaping jaw (open mouth, dark cavity + ragged teeth)
+      h.setColor(0).fillRect(cx - 2*S, cy + S, cx + 2*S, cy + 2*S);
+      // Teeth stubs
+      h.setColor(3);
+      h.fillRect(cx - 2*S, cy + S,     cx - S,   cy + S);
+      h.fillRect(cx,       cy + S,     cx + S,   cy + S);
+      h.fillRect(cx - 2*S, cy + 2*S,   cx - S,   cy + 2*S);
+      h.fillRect(cx + S,   cy + 2*S,   cx + 2*S, cy + 2*S);
     });
   }
-
   function drawHUD() {
     h.setFont('6x8', 1).setFontAlign(-1, -1).setColor(3).drawString(score, 2, 1);
     h.setFontAlign(0, -1).setColor(2).drawString('LVL ' + level, W / 2, 1);
