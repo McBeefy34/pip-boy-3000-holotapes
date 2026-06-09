@@ -1,7 +1,7 @@
 {
   "id": "PIPMAN",
   "name": "Pip Man",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "files": "HOLO/PIPMAN/APP.JS",
   "src": "HOLO/PIPMAN/APP.JS",
   "icon": "APPINFO/HOLO.IMG"

@@ -4,6 +4,11 @@
 //    knob1 (scroll wheel) → UP (-1) / DOWN (+1)
 //    knob2 (thumb wheel)  → LEFT (-1) / RIGHT (+1)
 //    ENC1_PRESS           → start / pause / resume / confirm
+//  Scoring:
+//    10 points per dot, 50 points per power pellet
+//    200 points per ghost eaten, plus 500 points and level increase on clearing all dots
+//
+//  Version 1.0.0
 // ============================================================
 
 (function () {
