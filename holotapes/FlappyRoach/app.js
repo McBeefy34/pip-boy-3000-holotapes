@@ -1,7 +1,7 @@
 // ====== Flappy Roach (A Flappy-ish Wasteland Game) ======
 // ====== A JS learning experience for Jim D. ======
-// ====== Thanks to @Code, @Darrian, @Rikkuness for all the advice, suggestions, tips, and tricks! ======
-// ====== Left Dial-press / DATA Button-press flaps/restarts game, STATS pauses, Power exits ======
+// ====== Thanks to @Code, @Darrian/@Rikkuness, @Aidan's Lab for all the advice, suggestions, tips, and tricks! ======
+// ====== Left Dial-press / DATA Button-press flaps/restarts game, STATS pauses, Page Selector exits, Power soft reboot ======
 //
 (function () {
   var oldCurrent = Pip.CURRENT;
@@ -14,8 +14,7 @@
   }
   clearWatch();
 
-  let USE_G = false, // <--- flip this to false to go back to bC
-    C = h;
+  let C = h;
   ((HS_PATH = '/HOLO/FLAPPY/flappy_hs'),
     (inTitle = true),
     (paused = false),
@@ -42,12 +41,12 @@
     (impactFX = null),
     (showGameOverUI = true),
     (inputLockedUntil = 0),
-    (GRAVITY = 0.8),
-    (FLAP = -8),
-    (PIPE_SPEED = 5),
+    (GRAVITY = 0.4),
+    (FLAP = -5),
+    (PIPE_SPEED = 4),
     (PIPE_GAP = 40),
     (PIPE_WIDTH = 15),
-    (PIPE_SPACING = 220),
+    (PIPE_SPACING = 200),
     (SND_FLAP = '/HOLO/FLAPPY/BeetleFlying.wav'),
     (SND_HIT = '/HOLO/FLAPPY/HitGround.wav'),
     (SND_OVER = '/HOLO/FLAPPY/GameOver.wav'),
@@ -59,7 +58,6 @@
     (EDGE_PAD = 0), // Change this value to adjust boundary bezel gap
     (PLAY_TOP = CEIL_H),
     (PLAY_BOT = H - FLOOR_H));
-
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
   function drawTitleScreen() {
@@ -90,7 +88,9 @@
     try {
       Pip.audioStop();
       Pip.audioStart(name);
-    } catch (e) {}
+    } catch (e) {
+      Pip.errorBox(e); // Enable pop-up error box
+    }
   }
 
   function playFlapSound() {
@@ -107,15 +107,15 @@
     C.fillRect(x - r, y - r, x + r, y + r);
     // droplets (fixed pattern, grows a bit with t)
     let d = r + 2;
-    C.fillRect(x - d, y - 1, x - d + 2, y + 1);
-    C.fillRect(x + d - 2, y - 1, x + d, y + 1);
-    C.fillRect(x - 1, y - d, x + 1, y - d + 2);
-    C.fillRect(x - 1, y + d - 2, x + 1, y + d);
+    C.fillRect(x - d, y - 1, x - d + 2, y + 1)
+      .fillRect(x + d - 2, y - 1, x + d, y + 1)
+      .fillRect(x - 1, y - d, x + 1, y - d + 2)
+      .fillRect(x - 1, y + d - 2, x + 1, y + d);
     // diagonals
-    C.fillRect(x - d, y - d, x - d + 2, y - d + 2);
-    C.fillRect(x + d - 2, y - d, x + d, y - d + 2);
-    C.fillRect(x - d, y + d - 2, x - d + 2, y + d);
-    C.fillRect(x + d - 2, y + d - 2, x + d, y + d);
+    C.fillRect(x - d, y - d, x - d + 2, y - d + 2)
+      .fillRect(x + d - 2, y - d, x + d, y - d + 2)
+      .fillRect(x - d, y + d - 2, x - d + 2, y + d)
+      .fillRect(x + d - 2, y + d - 2, x + d, y + d);
     // optional little “crack” line for pipe hit
     if (impactFX && impactFX.kind === 'HIT') {
       C.drawLine(x - r - 2, y, x + r + 2, y);
@@ -198,23 +198,13 @@
       try {
         saveHighScoreIfNeeded(score);
       } catch (e) {}
-      h.clearRect(0, PLAY_TOP, W - 1, PLAY_BOT - 1);
+      C.clearRect(0, PLAY_TOP, W - 1, PLAY_BOT - 1);
       E.reboot();
     }
   }
 
   function flushScreen() {
-    h.drawImage(
-      {
-        width: W,
-        height: H,
-        bpp: 2,
-        buffer: C.buffer,
-      },
-      0,
-      0,
-    );
-    h.flip();
+    C.clearRect();
   }
 
   function newPipe() {
@@ -225,9 +215,9 @@
     // Logic is based on a lane now
     let gap = Math.min(PIPE_GAP, laneH - 20); // 20 is analogous to your old "H - 30" safety
     if (gap < 10) gap = 10; // safety: don't allow absurdly tiny gaps
-    let margin = 10; // same feel as before
-    let usable = laneH - gap - margin * 2;
-    let gapY = laneTop + margin + Math.random() * (usable > 0 ? usable : 1);
+    let margin = 10, // same feel as before
+      usable = laneH - gap - margin * 2,
+      gapY = laneTop + margin + Math.random() * (usable > 0 ? usable : 1);
     pipes.push({ x: W, gapY: gapY, scored: false, gap: gap });
   }
 
@@ -246,13 +236,17 @@
   function drawBounds() {
     // Ceiling
     C.setColor(0, 0, 0);
-    C.fillRect(0, 0, W - 1, PLAY_TOP - 1);
-    // Floor
-    C.fillRect(0, PLAY_BOT, W - 1, H - 1);
+    C.fillRect(0, 0, W - 1, PLAY_TOP - 1)
+      // Floor
+      .fillRect(0, PLAY_BOT, W - 1, H - 1);
     // Optional: thin bright edge line so it "reads" clearly
     C.setColor(1, 1, 1);
-    C.drawLine(0, PLAY_TOP - 1, W - 1, PLAY_TOP - 1);
-    C.drawLine(0, PLAY_BOT, W - 1, PLAY_BOT);
+    C.drawLine(0, PLAY_TOP - 1, W - 1, PLAY_TOP - 1).drawLine(
+      0,
+      PLAY_BOT,
+      W - 1,
+      PLAY_BOT,
+    );
   }
 
   function update() {
@@ -294,11 +288,10 @@
     if (bird.y < 0 || bird.y + bird.size > H) endRun('FELL');
 
     // ---- Ceiling / Floor Collision (CLAMP HERE) ----
-    if (bird.y <= PLAY_TOP) {
-      bird.y = PLAY_TOP;
-      endRun('HIT');
-    } else if (bird.y + bird.size >= PLAY_BOT) {
-      bird.y = PLAY_BOT - bird.size;
+    let clippedY = E.clip(bird.y, PLAY_TOP, PLAY_BOT - bird.size);
+
+    if (clippedY !== bird.y) {
+      bird.y = clippedY;
       endRun('HIT');
     }
 
@@ -308,8 +301,8 @@
       let p = pipes[i];
       p.x -= PIPE_SPEED;
       if (bird.x + bird.size > p.x && bird.x < p.x + PIPE_WIDTH) {
-        let gapTop = Math.max(p.gapY, PLAY_TOP);
-        let gapBot = Math.min(p.gapY + p.gap, PLAY_BOT);
+        let gapTop = Math.max(p.gapY, PLAY_TOP),
+          gapBot = Math.min(p.gapY + p.gap, PLAY_BOT);
         if (bird.y < gapTop || bird.y + bird.size > gapBot) endRun('HIT');
       }
       if (!p.scored && p.x + PIPE_WIDTH < bird.x) {
@@ -318,7 +311,7 @@
       }
     }
 
-    // Spawn pipes
+    // Spawn pipesF
     let last = pipes[pipes.length - 1];
     if (!last) newPipe();
     else if (last.x <= W - PIPE_SPACING) newPipe();
@@ -330,13 +323,13 @@
 
   function drawCentered(text, y) {
     C.setFontAlign(-1, -1); // left/top
-    let tw = C.stringWidth(text);
-    let x = Math.max(0, Math.floor((W - tw) / 2));
+    let tw = C.stringWidth(text),
+      x = Math.max(0, Math.floor((W - tw) / 2));
     C.drawString(text, x, y);
   }
 
   function draw() {
-    h.clearRect(0, PLAY_TOP, W - 1, PLAY_BOT - 1);
+    C.clearRect(0, PLAY_TOP, W - 1, PLAY_BOT - 1);
     if (inTitle) {
       drawTitleScreen();
       return;
@@ -346,12 +339,12 @@
     // (Optional but recommended) draw visible ceiling/floor first
     drawBounds();
     for (let i = 0; i < pipes.length; i++) {
-      let p = pipes[i];
-      let gapY = Math.max(p.gapY, PLAY_TOP);
+      let p = pipes[i],
+        gapY = Math.max(p.gapY, PLAY_TOP);
       // Top pipe: stop at the start of the gap (but never draw above the ceiling bar)
-      C.fillRect(p.x, PLAY_TOP, p.x + PIPE_WIDTH, gapY);
-      // Bottom pipe: start after the gap and stop at the floor bar
-      C.fillRect(p.x, gapY + p.gap, p.x + PIPE_WIDTH, PLAY_BOT);
+      C.fillRect(p.x, PLAY_TOP, p.x + PIPE_WIDTH, gapY)
+        // Bottom pipe: start after the gap and stop at the floor bar
+        .fillRect(p.x, gapY + p.gap, p.x + PIPE_WIDTH, PLAY_BOT);
     }
     // Rad-Roach
     drawRadroach(bird.x, bird.y, bird.size, frameCount, roachFlapT, roachTilt);
@@ -361,10 +354,10 @@
     if (score !== lastDrawnScore) {
       lastDrawnScore = score;
     }
-    h.drawString(' Score: ' + score, 2, PLAY_TOP + 2);
+    C.drawString(' Score: ' + score, 2, PLAY_TOP + 2);
     // If Game Over
     if (gameOver) {
-      h.clear(); // full clear only for static screen
+      C.clear(); // full clear only for static screen
       // If we’re in the impact phase, draw splat instead of text
       if (!showGameOverUI && impactFX) {
         // Splat overlay - Increases by 0.3 times.
@@ -391,55 +384,47 @@
   // If the display supports color and you’re already using setColor, you could make the eyes “glow red”
   // by briefly switching colors for the eye pixels — but the blink/pulse trick works in monochrome as well.
   function drawRadroach(x, y, s, t, flapT, tilt) {
-    let k = Math.max(1, Math.floor(s / 3));
-    // tilt shift: -1..1 => -2..2 pixels
-    let dxTop = Math.round(-tilt * 2); // tilt up shifts head slightly
-    let dxBot = Math.round(tilt * 2);
+    let k = Math.max(1, Math.floor(s / 3)),
+      // tilt shift: -1..1 => -2..2 pixels
+      dxTop = Math.round(-tilt * 2), // tilt up shifts head slightly
+      dxBot = Math.round(tilt * 2);
     // BODY
-    C.fillRect(x + 1 * k + dxTop, y + 1 * k, x + 5 * k + dxBot, y + 4 * k);
-    C.fillRect(x + 2 * k + dxTop, y + 0 * k, x + 4 * k + dxTop, y + 1 * k); // head
-    C.fillRect(x + 1 * k + dxBot, y + 4 * k, x + 5 * k + dxBot, y + 5 * k); // abdomen
-    // EYES (mono "glow" effect by adding a halo)
-    let eyeGlow = (frameCount >> 3) & 1; // toggle every ~8 frames
-    let ex1 = x + 2 * k + dxTop;
-    let ex2 = x + 4 * k + dxTop;
-    let ey = y + 0 * k;
-    // Core eye pixels
-    C.fillRect(ex1, ey, ex1, ey);
-    C.fillRect(ex2, ey, ex2, ey);
-    if (eyeGlow) {
-      // halo pixels (a tiny plus-shape around each eye)
-      C.fillRect(ex1 - 1, ey, ex1 - 1, ey);
-      C.fillRect(ex1 + 1, ey, ex1 + 1, ey);
-      C.fillRect(ex1, ey - 1, ex1, ey - 1);
-      C.fillRect(ex1, ey + 1, ex1, ey + 1);
-      C.fillRect(ex2 - 1, ey, ex2 - 1, ey);
-      C.fillRect(ex2 + 1, ey, ex2 + 1, ey);
-      C.fillRect(ex2, ey - 1, ex2, ey - 1);
-      C.fillRect(ex2, ey + 1, ex2, ey + 1);
-    }
+    C.fillRect(x + 1 * k + dxTop, y + 1 * k, x + 5 * k + dxBot, y + 4 * k)
+      .fillRect(x + 2 * k + dxTop, y + 0 * k, x + 4 * k + dxTop, y + 1 * k) // head
+      .fillRect(x + 1 * k + dxBot, y + 4 * k, x + 5 * k + dxBot, y + 5 * k); // abdomen
+    // Removed the Eye Glow and Halo Effects Here
     // WINGS (only visible right after flap)
     if (flapT > 0) {
       // alternate wing pose for a flapping look
       let w = flapT & 1 ? 3 : 2;
       // left wing
-      C.drawLine(x + 1 * k + dxTop, y + 2 * k, x - w * k, y + 1 * k);
-      C.drawLine(x + 1 * k + dxTop, y + 3 * k, x - w * k, y + 4 * k);
-      // right wing
-      C.drawLine(x + 5 * k + dxBot, y + 2 * k, x + (6 + w) * k, y + 1 * k);
-      C.drawLine(x + 5 * k + dxBot, y + 3 * k, x + (6 + w) * k, y + 4 * k);
+      C.drawLine(x + 1 * k + dxTop, y + 2 * k, x - w * k, y + 1 * k)
+        .drawLine(x + 1 * k + dxTop, y + 3 * k, x - w * k, y + 4 * k)
+        // right wing
+        .drawLine(x + 5 * k + dxBot, y + 2 * k, x + (6 + w) * k, y + 1 * k)
+        .drawLine(x + 5 * k + dxBot, y + 3 * k, x + (6 + w) * k, y + 4 * k);
     }
     // LEGS (simple)
-    C.fillRect(x + 0 * k + dxTop, y + 2 * k, x + 0 * k + dxTop, y + 2 * k);
-    C.fillRect(x + 6 * k + dxBot, y + 2 * k, x + 6 * k + dxBot, y + 2 * k);
+    C.fillRect(
+      x + 0 * k + dxTop,
+      y + 2 * k,
+      x + 0 * k + dxTop,
+      y + 2 * k,
+    ).fillRect(x + 6 * k + dxBot, y + 2 * k, x + 6 * k + dxBot, y + 2 * k);
   }
 
   function bindGameControls() {
-    let enc1b;
-    let enc1time = 0;
-    let enc1fast = 0;
+    let enc1b,
+      enc1time = 0,
+      enc1fast = 0;
 
-    pinMode(ENC1_B, 'input');
+    Pip.onExclusive('knob1', function (dir) {
+      if (dir > 0) {
+        // clockwise
+      } else {
+        // counter-clockwise
+      }
+    });
 
     setWatch(
       function (e) {
@@ -453,8 +438,8 @@
 
           enc1time = e.time;
 
-          let step = Math.max(1, Math.min(5, enc1fast >> 1));
-          let dir = e.state ^ e.data ? step : -step;
+          let step = Math.max(1, Math.min(5, enc1fast >> 1)),
+            dir = e.state ^ e.data ? step : -step;
 
           if (paused && !gameOver) {
             if (dir > 0) menuIndex--;
@@ -493,8 +478,8 @@
     C.setFont('6x8', 2);
     for (let i = 0; i < menuItems.length; i++) {
       //    let y = 52 + i * 12;
-      let y = 102 + i * 16; // Adjust Y location of menuItems
-      let t = (i === menuIndex ? '> ' : '  ') + menuItems[i];
+      let y = 102 + i * 16, // Adjust Y location of menuItems
+        t = (i === menuIndex ? '> ' : '  ') + menuItems[i];
       drawCentered(t, y);
     }
     C.setFont('6x8', 2);
@@ -561,39 +546,36 @@
     }, 950); // Changes Splat duration
   }
 
-  function startGame() {
-    stopGame();
-    resetGame();
-    draw();
-    playSound(SND_START); // optional: start sound when restarting
-    bindGameControls();
-    powerWatchId = setWatch(
-      () => {
-        E.reboot();
-      },
-      BTN_POWER,
-      {
-        debounce: 50,
-        edge: 'rising',
-        repeat: true,
-      },
-    );
-    draw();
-    // Below used to limit draw routine to every other tick
-    // Used in conjunction with "let renderToggle = false"
-    // If NOT skipping ticks then set "let renderToggle = false" to "true"
-    //  loopId = setInterval(function () {    // Optional to skip ticks
-    loopId = setInterval(() => {
-      // Optional to NOT skip ticks
-      update();
-      frameCount++;
-      //   renderToggle = !renderToggle;    // Optional to skip ticks
-      //   if (renderToggle) draw();    // Optional to skip ticks
-      draw(); // Optional to NOT skip ticks
-    }, 95); // Adjust framerate
-  }
-
-  startGame();
+  // The Game Starts Here
+  stopGame();
+  resetGame();
+  draw();
+  playSound(SND_START); // optional: start sound when restarting
+  bindGameControls();
+  powerWatchId = setWatch(
+    () => {
+      E.reboot();
+    },
+    BTN_POWER,
+    {
+      debounce: 50,
+      edge: 'rising',
+      repeat: true,
+    },
+  );
+  draw();
+  // Below used to limit draw routine to every other tick
+  // Used in conjunction with "let renderToggle = false"
+  // If NOT skipping ticks then set "let renderToggle = false" to "true"
+  //  loopId = setInterval(function () {    // Optional to skip ticks
+  loopId = setInterval(() => {
+    // Optional to NOT skip ticks
+    update();
+    frameCount++;
+    //   renderToggle = !renderToggle;    // Optional to skip ticks
+    //   if (renderToggle) draw();    // Optional to skip ticks
+    draw(); // Optional to NOT skip ticks
+  }, 50); // Adjust framerate
 
   return {
     fullscreen: true,

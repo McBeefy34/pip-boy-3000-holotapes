@@ -118,8 +118,8 @@
     "id": "flappy",
     "name": "Flappy Roach",
     "author": "@JLDenson",
-    "version": "1.0.0",
-    "description": "A Fallout-themed take on the classic Flappy Bird. Guide a cockroach through the Wasteland, dodging every obstacle in its path.",
+    "version": "1.0.1",
+    "description": "A Fallout-themed take on the classic Flappy Bird. Guide a Radroach through the Wasteland, dodging every obstacle in its path.",
     "icon": "FlappyRoach/assets/flappyroach.png",
     "previews": [],
     "type": "game",
@@ -235,12 +235,34 @@
     "storageOptional": []
   },
   {
+    "id": "pipwordle",
+    "name": "Pip-Wordle",
+    "author": "@amogus-67",
+    "version": "1.0.0",
+    "description": "A Wordle clone for the Pip-Boy 3000.",
+    "icon": "Pip-Wordle/assets/missing-icon.png",
+    "previews": [],
+    "type": "game",
+    "readme": "Pip-Wordle/README.md",
+    "storage": [
+      {
+        "name": "HOLO/PIP_WORDLE/APP.JS",
+        "url": "Pip-Wordle/app.min.js"
+      },
+      {
+        "name": "HOLO/PIP_WORDLE/words_5.TXT",
+        "url": "Pip-Wordle/assets/words_5.txt"
+      }
+    ],
+    "storageOptional": []
+  },
+  {
     "id": "pipman",
     "name": "PIPMAN",
     "author": "@McBeefy34",
-    "version": "1.0.0",
-    "description": "A Pac-Man-inspired maze game where you navigate a pipman through a labyrinth, collecting dots and power pellets while avoiding ghosts.",
-    "icon": "PipMan/assets/missing-icon.png",
+    "version": "1.0.1",
+    "description": "PipMan is a Pac-Man inspired arcade game built for the Pip-Boy 3000, blending retro gaming nostalgia with the iconic wasteland aesthetic. Navigate the vault, dodge ghouls, and collect every bottle caps, all from the wrist-mounted terminal of the Commonwealth.",
+    "icon": "PipMan/assets/pipman_logo.png",
     "previews": [],
     "type": "game",
     "readme": "PipMan/README.md",
