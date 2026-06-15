@@ -1,8 +1,8 @@
 (function () {
-  const APP_ID = 'Wordle';
+  const APP_ID = 'pipwordle';
   const APP_NAME = 'PIP-WORDLE';
   const VERSION = '1.0.0';
-  const SOUND_DIR = 'HOLO/WORDLE/';
+  const SOUND_DIR = 'HOLO/PIP_WORDLE/';
 
   const WORD_LEN = 5;
   const MAX_GUESSES = 6;
@@ -18,10 +18,10 @@
     submit: 'SOUND/FX/HOLSTOP.WAV',
     invalid: 'SOUND/ALARM/Klaxon.WAV',
     win: 'SOUND/ALARM/Party.WAV',
-    lose: 'SOUND/ALARM/Klaxon.WAV'
+    lose: 'SOUND/ALARM/Klaxon.WAV',
   };
 
-  const WORD_DIR = 'HOLO/WORDLE/';
+  const WORD_DIR = 'HOLO/PIP_WORDLE/';
 
   const FALLBACK_BLOB =
     'ABOUTOTHERWHICHTHEIRTHEREFIRSTWOULDTHESECLICKSOUND' +
@@ -66,9 +66,9 @@
   const LEGEND_TILE = 34;
 
   const KEY_LAYOUT = [
-    ['Q','W','E','R','T','Y','U','I','O','P'],
-    ['A','S','D','F','G','H','J','K','L', null],
-    ['Z','X','C','V','B','N','M', null,'DEL','ENT']
+    ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', null],
+    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', null, 'DEL', 'ENT'],
   ];
   const KB_ROWS = KEY_LAYOUT.length;
   const KB_COLS = KEY_LAYOUT[0].length;
@@ -172,7 +172,11 @@
   }
 
   function submitGuess() {
-    const word = grid[row].map(function (cell) { return cell.letter; }).join('');
+    const word = grid[row]
+      .map(function (cell) {
+        return cell.letter;
+      })
+      .join('');
     if (word.length < WORD_LEN) {
       message = 'NOT ENOUGH LETTERS';
       playSound('invalid');
@@ -277,7 +281,7 @@
 
   function correctOutline(x, y, w, h2) {
     h.setColor(0);
-    h.drawRect(x,     y,     x + w - 1, y + h2 - 1);
+    h.drawRect(x, y, x + w - 1, y + h2 - 1);
     h.drawRect(x + 1, y + 1, x + w - 2, y + h2 - 2);
     h.setColor(3);
     h.drawRect(x + 2, y + 2, x + w - 3, y + h2 - 3);
@@ -421,7 +425,8 @@
       drawGrid();
       drawKeyboard();
       if (phase === 'playing' && message) drawMessageBox(message, '', '');
-      if (phase === 'won' || phase === 'lost') drawMessageBox(message, resultDetail, 'CLICK TO PLAY AGAIN');
+      if (phase === 'won' || phase === 'lost')
+        drawMessageBox(message, resultDetail, 'CLICK TO PLAY AGAIN');
     }
     h.flip();
     Pip.lastFlip = getTime();
@@ -480,10 +485,18 @@
     Pip.onExclusive('knob2', onKnob2);
 
     if (typeof ENC1_PRESS !== 'undefined') {
-      watchEnter = setWatch(onPress, ENC1_PRESS, { repeat: true, edge: 'rising', debounce: 50 });
+      watchEnter = setWatch(onPress, ENC1_PRESS, {
+        repeat: true,
+        edge: 'rising',
+        debounce: 50,
+      });
     }
     if (typeof BTN_PLAY !== 'undefined') {
-      watchBack = setWatch(onBack, BTN_PLAY, { repeat: true, edge: 'rising', debounce: 50 });
+      watchBack = setWatch(onBack, BTN_PLAY, {
+        repeat: true,
+        edge: 'rising',
+        debounce: 50,
+      });
     }
 
     phase = 'title';
@@ -493,8 +506,14 @@
   function remove() {
     if (stopped) return;
     stopped = true;
-    if (watchEnter) { clearWatch(watchEnter); watchEnter = null; }
-    if (watchBack) { clearWatch(watchBack); watchBack = null; }
+    if (watchEnter) {
+      clearWatch(watchEnter);
+      watchEnter = null;
+    }
+    if (watchBack) {
+      clearWatch(watchBack);
+      watchBack = null;
+    }
     Pip.removeListener('knob1', onKnob1);
     Pip.removeListener('knob2', onKnob2);
     Pip.audioStop();
